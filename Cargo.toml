@@ -1,0 +1,11 @@
+[package]
+name = "hermes"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+downcaster = { git = "ssh://github.com/jcamposforner/downcaster", tag = "1.0.0"  }
+hermes-derive = { path = "hermes-derive", optional = true }
+
+[features]
+derive = ["hermes-derive"]
