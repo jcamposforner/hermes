@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "downcaster"
 version = "0.1.0"
-source = "git+ssh://github.com/jcamposforner/downcaster?tag=1.0.0#ad670898bbce7c5c7f17ce05444d8a14b36d336e"
+source = "git+https://github.com/jcamposforner/downcaster?tag=1.0.0#ad670898bbce7c5c7f17ce05444d8a14b36d336e"
 
 [[package]]
 name = "hermes"
