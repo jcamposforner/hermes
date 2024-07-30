@@ -1,8 +1,9 @@
 use std::any::TypeId;
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::rc::Rc;
+use std::sync::Arc;
+
 use downcaster::{Downcast, downcast_ref};
+
 use crate::bus::EventBus;
 use crate::event::Event;
 use crate::subscriber::Subscriber;
@@ -14,7 +15,7 @@ pub struct SynchronousEventBus {
 }
 
 impl EventBus for SynchronousEventBus {
-    fn register<E, S>(&mut self, subscriber: Rc<S>)
+    fn register<E, S>(&mut self, subscriber: Arc<S>)
     where
         E: Event + Downcast + 'static,
         S: Subscriber<E> + 'static
@@ -48,7 +49,7 @@ impl EventBus for SynchronousEventBus {
 #[cfg(test)]
 mod tests {
     use std::cell::RefCell;
-    use std::rc::Rc;
+
     use super::*;
 
     struct TestEvent {}
@@ -78,12 +79,12 @@ mod tests {
     }
 
     #[test]
-    fn it_works() {
+    fn it_should_publish_and_modify_state() {
         let mut event_bus = SynchronousEventBus {
             subscribers: HashMap::new()
         };
 
-        let handler = Rc::new(
+        let handler = Arc::new(
             TestEventHandler { total_messages_received: RefCell::new(0) }
         );
         event_bus.register::<TestEvent, TestEventHandler>(handler.clone());
