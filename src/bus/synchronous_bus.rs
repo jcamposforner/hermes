@@ -8,7 +8,7 @@ use crate::bus::EventBus;
 use crate::event::Event;
 use crate::subscriber::Subscriber;
 
-type SubscriberClosure = Box<dyn FnMut(&dyn Event)>;
+type SubscriberClosure = Box<dyn Fn(&dyn Event)>;
 
 #[derive(Default)]
 pub struct SynchronousEventBus {
@@ -36,10 +36,10 @@ impl EventBus for SynchronousEventBus {
             .push(handler);
     }
 
-    fn publish<T: Event>(&mut self, event: &T) {
+    fn publish<T: Event>(&self, event: &T) {
         let event_type = TypeId::of::<T>();
 
-        if let Some(handlers) = self.subscribers.get_mut(&event_type) {
+        if let Some(handlers) = self.subscribers.get(&event_type) {
             for handler in handlers {
                 handler(event);
             }
@@ -57,7 +57,7 @@ mod tests {
 
     impl Event for TestEvent {
         fn event_name(&self) -> &'static str {
-            return "test_event";
+            "test_event"
         }
     }
 
@@ -65,7 +65,7 @@ mod tests {
 
     impl Event for OtherTestEvent {
         fn event_name(&self) -> &'static str {
-            return "other_test_event";
+            "other_test_event"
         }
     }
 

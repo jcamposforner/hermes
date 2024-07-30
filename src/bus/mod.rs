@@ -7,5 +7,5 @@ use crate::subscriber::Subscriber;
 
 pub trait EventBus {
     fn register<E: Event + Downcast + 'static, S: Subscriber<E> + 'static>(&mut self, subscriber: Arc<S>);
-    fn publish<E: Event>(&mut self, event: &E);
+    fn publish<E: Event>(&self, event: &E);
 }
