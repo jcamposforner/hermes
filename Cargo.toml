@@ -4,7 +4,11 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-downcaster = { git = "ssh://github.com/jcamposforner/downcaster", tag = "1.0.0"  }
+serde = { version = "1", features = ["derive"] }
+
+downcaster = { path = "../downcaster" }
+#downcaster = { git = "ssh://github.com/jcamposforner/downcaster", tag = "1.0.0" }
+
 hermes-derive = { path = "hermes-derive", optional = true }
 
 [features]
