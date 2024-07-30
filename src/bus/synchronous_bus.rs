@@ -10,6 +10,7 @@ use crate::subscriber::Subscriber;
 
 type SubscriberClosure = Box<dyn FnMut(&dyn Event)>;
 
+#[derive(Default)]
 pub struct SynchronousEventBus {
     subscribers: HashMap<TypeId, Vec<SubscriberClosure>>
 }
@@ -84,10 +85,8 @@ mod tests {
             subscribers: HashMap::new()
         };
 
-        let handler = Arc::new(
-            TestEventHandler { total_messages_received: RefCell::new(0) }
-        );
-        event_bus.register::<TestEvent, TestEventHandler>(handler.clone());
+        let handler = Arc::new(TestEventHandler { total_messages_received: RefCell::new(0) });
+        event_bus.register(handler.clone());
 
         event_bus.publish(&TestEvent {});
         event_bus.publish(&OtherTestEvent {});
