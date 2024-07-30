@@ -1,4 +1,4 @@
-#![warn(clippy::correctness, clippy::perf, clippy::suspicious, clippy::complexity, clippy::nursery, clippy::cargo, clippy::style)]
+#![warn(clippy::all)]
 
 pub mod event;
 pub mod subscriber;

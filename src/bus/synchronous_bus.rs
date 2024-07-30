@@ -32,7 +32,7 @@ impl EventBus for SynchronousEventBus {
 
         self.subscribers
             .entry(event_type)
-            .or_insert(Vec::new())
+            .or_default()
             .push(handler);
     }
 

@@ -1,4 +1,4 @@
-mod synchronous_bus;
+pub mod synchronous_bus;
 
 use std::sync::Arc;
 use downcaster::Downcast;
