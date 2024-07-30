@@ -14,7 +14,7 @@ pub struct SynchronousEventBus {
 }
 
 impl EventBus for SynchronousEventBus {
-    fn register<E, S>(&mut self, mut subscriber: Rc<RefCell<S>>)
+    fn register<E, S>(&mut self, subscriber: Rc<S>)
     where
         E: Event + Downcast + 'static,
         S: Subscriber<E> + 'static
@@ -24,8 +24,7 @@ impl EventBus for SynchronousEventBus {
         let handler: SubscriberClosure = Box::new(move |event| {
             downcast_ref!(event, E)
                 .map(|event| {
-                    let mut mut_subscriber = subscriber.borrow_mut();
-                    mut_subscriber.handle_event(event);
+                    subscriber.handle_event(event);
                 });
         });
 
@@ -69,12 +68,12 @@ mod tests {
     }
 
     struct TestEventHandler {
-        total_messages_received: u32
+        total_messages_received: RefCell<u32>
     }
 
     impl Subscriber<TestEvent> for TestEventHandler {
-        fn handle_event(&mut self, _event: &TestEvent) {
-            self.total_messages_received += 1;
+        fn handle_event(&self, _event: &TestEvent) {
+            *self.total_messages_received.borrow_mut() += 1;
         }
     }
 
@@ -85,15 +84,13 @@ mod tests {
         };
 
         let handler = Rc::new(
-            RefCell::new(
-                TestEventHandler { total_messages_received: 0 }
-            )
+            TestEventHandler { total_messages_received: RefCell::new(0) }
         );
         event_bus.register::<TestEvent, TestEventHandler>(handler.clone());
 
         event_bus.publish(&TestEvent {});
         event_bus.publish(&OtherTestEvent {});
 
-        assert_eq!(handler.clone().borrow().total_messages_received, 1);
+        assert_eq!(*handler.clone().total_messages_received.borrow(), 1);
     }
 }

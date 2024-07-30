@@ -7,6 +7,6 @@ use crate::event::Event;
 use crate::subscriber::Subscriber;
 
 pub trait EventBus {
-    fn register<E: Event + Downcast + 'static, S: Subscriber<E> + 'static>(&mut self, subscriber: Rc<RefCell<S>>);
+    fn register<E: Event + Downcast + 'static, S: Subscriber<E> + 'static>(&mut self, subscriber: Rc<S>);
     fn publish<E: Event>(&mut self, event: &E);
 }
