@@ -1,4 +1,5 @@
 use std::any::TypeId;
+use std::cell::RefCell;
 use std::collections::HashMap;
 use std::rc::Rc;
 use downcaster::{Downcast, downcast_ref};
@@ -13,7 +14,7 @@ pub struct SynchronousEventBus {
 }
 
 impl EventBus for SynchronousEventBus {
-    fn register<E, S>(&mut self, subscriber: Rc<S>)
+    fn register<E, S>(&mut self, mut subscriber: Rc<RefCell<S>>)
     where
         E: Event + Downcast + 'static,
         S: Subscriber<E> + 'static
@@ -23,13 +24,8 @@ impl EventBus for SynchronousEventBus {
         let handler: SubscriberClosure = Box::new(move |event| {
             downcast_ref!(event, E)
                 .map(|event| {
-                    let subscriber = subscriber.as_ref();
-
-                    unsafe {
-                        let mut subscriber_mut_ptr: *mut S = subscriber as *const S as *mut S;
-
-                        (*subscriber_mut_ptr).handle_event(event)
-                    }
+                    let mut mut_subscriber = subscriber.borrow_mut();
+                    mut_subscriber.handle_event(event);
                 });
         });
 
@@ -88,12 +84,16 @@ mod tests {
             subscribers: HashMap::new()
         };
 
-        let handler = Rc::new(TestEventHandler { total_messages_received: 0 });
+        let handler = Rc::new(
+            RefCell::new(
+                TestEventHandler { total_messages_received: 0 }
+            )
+        );
         event_bus.register::<TestEvent, TestEventHandler>(handler.clone());
 
         event_bus.publish(&TestEvent {});
         event_bus.publish(&OtherTestEvent {});
 
-        assert_eq!(handler.clone().total_messages_received, 1);
+        assert_eq!(handler.clone().borrow().total_messages_received, 1);
     }
 }
