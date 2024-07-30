@@ -1,5 +1,6 @@
 use std::any::TypeId;
 use std::collections::HashMap;
+use std::rc::Rc;
 use downcaster::{Downcast, downcast_ref};
 use crate::bus::EventBus;
 use crate::event::Event;
@@ -12,7 +13,7 @@ pub struct SynchronousEventBus {
 }
 
 impl EventBus for SynchronousEventBus {
-    fn register<E, S>(&mut self, mut subscriber: S)
+    fn register<E, S>(&mut self, subscriber: Rc<S>)
     where
         E: Event + Downcast + 'static,
         S: Subscriber<E> + 'static
@@ -21,7 +22,15 @@ impl EventBus for SynchronousEventBus {
 
         let handler: SubscriberClosure = Box::new(move |event| {
             downcast_ref!(event, E)
-                .map(|event| subscriber.handle_event(event));
+                .map(|event| {
+                    let subscriber = subscriber.as_ref();
+
+                    unsafe {
+                        let mut subscriber_mut_ptr: *mut S = subscriber as *const S as *mut S;
+
+                        (*subscriber_mut_ptr).handle_event(event)
+                    }
+                });
         });
 
         self.subscribers
@@ -64,14 +73,12 @@ mod tests {
     }
 
     struct TestEventHandler {
-        total_messages_received: Rc<RefCell<u32>>
+        total_messages_received: u32
     }
 
     impl Subscriber<TestEvent> for TestEventHandler {
         fn handle_event(&mut self, _event: &TestEvent) {
-            let mut total_messages = self.total_messages_received.borrow_mut();
-
-            *total_messages += 1;
+            self.total_messages_received += 1;
         }
     }
 
@@ -81,13 +88,12 @@ mod tests {
             subscribers: HashMap::new()
         };
 
-        let total_messages = Rc::new(RefCell::new(0));
-        let handler = TestEventHandler { total_messages_received: total_messages.clone() };
-        event_bus.register::<TestEvent, TestEventHandler>(handler);
+        let handler = Rc::new(TestEventHandler { total_messages_received: 0 });
+        event_bus.register::<TestEvent, TestEventHandler>(handler.clone());
 
         event_bus.publish(&TestEvent {});
         event_bus.publish(&OtherTestEvent {});
 
-        assert_eq!(*total_messages.borrow(), 1);
+        assert_eq!(handler.clone().total_messages_received, 1);
     }
 }
