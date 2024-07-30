@@ -1,6 +1,5 @@
 mod synchronous_bus;
 
-use std::cell::RefCell;
 use std::rc::Rc;
 use downcaster::Downcast;
 use crate::event::Event;
