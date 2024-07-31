@@ -129,7 +129,8 @@ mod tests {
         tx: Sender<bool>
     }
 
-    impl Event for TestEvent {}
+    impl Event for TestEvent {
+    }
 
     struct TestEventHandler {}
 

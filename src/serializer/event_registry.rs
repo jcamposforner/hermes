@@ -1,19 +1,31 @@
-use std::any::TypeId;
+use std::any::{Any, TypeId};
 use std::collections::HashMap;
 
-#[derive(Default, Debug)]
+use serde_json::Value;
+
+use crate::event::{Event, EventIdentifiable};
+use crate::serializer::error::DeserializeError;
+use crate::serializer::EventDeserialized;
+
+type SubscriberClosure = Box<fn(Value) -> Result<Box<dyn Event>, DeserializeError>>;
+
+#[derive(Default)]
 pub struct EventRegistry {
-    internal: HashMap<String, TypeId>,
+    internal: HashMap<String, SubscriberClosure>,
 }
 
 impl EventRegistry {
-    pub fn new(registry: HashMap<String, TypeId>) -> Self {
+    pub fn new(registry: HashMap<String, SubscriberClosure>) -> Self {
         Self {
             internal: registry,
         }
     }
 
-    pub fn add(&mut self, event_name: &'static str, event_type: TypeId) {
-        self.internal.insert(event_name.to_string(), event_type);
+    pub fn add<T: EventIdentifiable + EventDeserialized>(&mut self) {
+        self.internal.insert(T::event_name().to_string(), Box::new(T::from_value));
+    }
+
+    pub fn get(&self, event_name: &str) -> Option<&SubscriberClosure> {
+        self.internal.get(event_name)
     }
 }

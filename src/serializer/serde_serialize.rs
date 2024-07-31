@@ -36,7 +36,5 @@ mod tests {
         let event = SerializableEvent { id: "1".to_string() };
 
         let serialized = SerdeJSONEventSerializer.serialize(&event);
-        
-        println!("{:?}", serialized.unwrap());
     }
 }
