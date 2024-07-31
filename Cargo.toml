@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-serde = { version = "1", features = ["derive"] }
+log = { version = "0.4.22", features = [] }
 
 downcaster = { git = "https://github.com/jcamposforner/downcaster", tag = "1.0.0" }
 
@@ -12,3 +12,22 @@ hermes-derive = { path = "hermes-derive", optional = true }
 
 [features]
 derive = ["hermes-derive"]
+async = ["tokio"]
+multithreading = ["rayon"]
+serializer = ["serde"]
+
+full = ["derive", "async", "multithreading", "serializer"]
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
+[dependencies.tokio]
+version = "1"
+features = ["full"]
+optional = true
+
+[dependencies.rayon]
+version = "1"
+optional = true
