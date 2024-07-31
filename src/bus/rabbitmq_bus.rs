@@ -3,7 +3,7 @@ use std::error::Error;
 use lapin::{BasicProperties, Channel, Connection};
 use serde::Serialize;
 
-use crate::bus::{AsynchronousEventBus, EventBus};
+use crate::bus::AsynchronousEventBus;
 use crate::bus::error::PublishError;
 use crate::event::{Event, EventIdentifiable};
 use crate::serializer::EventSerializer;
@@ -48,12 +48,11 @@ impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
 
 impl<T: EventSerializer> AsynchronousEventBus for RabbitEventBus<'_, T> {
     async fn publish<E: Event + EventIdentifiable + Serialize>(&self, event: E) -> Result<(), PublishError> {
-        let payload = self.serializer.serialize(&event).unwrap();
-
         let channel = self.channel
                           .as_ref()
                           .ok_or(PublishError::CannotOpenChannel)?;
 
+        let payload = self.serializer.serialize(&event).map_err(|_| PublishError::CannotSerializeEvent)?;
         let publish_message = channel
             .basic_publish(
                 self.exchange.as_str(),
