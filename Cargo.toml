@@ -15,8 +15,13 @@ derive = ["hermes-derive"]
 async = ["tokio"]
 multithreading = ["rayon"]
 serializer = ["serde", "serde_json"]
+rabbit = ["amqprs", "serializer"]
 
-full = ["derive", "async", "multithreading", "serializer"]
+full = ["derive", "async", "multithreading", "serializer", "rabbit"]
+
+[dependencies.amqprs]
+version = "1"
+optional = true
 
 [dependencies.serde]
 version = "1"
