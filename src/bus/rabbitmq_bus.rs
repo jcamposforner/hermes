@@ -25,7 +25,7 @@ impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
         }
     }
 
-    async fn recreate_channel(&mut self) -> Result<(), Box<dyn Error>> {
+    async fn recreate_channel(&mut self) -> Result<Option<&Channel>, Box<dyn Error>> {
         match self.channel {
             Some(_) => {},
             None => {
@@ -33,12 +33,6 @@ impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
                 self.channel = Some(channel);
             }
         };
-
-        Ok(())
-    }
-
-    async fn get_channel(&mut self) -> Result<Option<&Channel>, Box<dyn Error>> {
-        self.recreate_channel().await?;
 
         Ok(self.channel.as_ref())
     }
