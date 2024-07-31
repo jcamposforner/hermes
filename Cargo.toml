@@ -12,14 +12,14 @@ hermes-derive = { path = "hermes-derive", optional = true }
 
 [features]
 derive = ["hermes-derive"]
-async = ["tokio"]
+async = ["tokio", "serializer"]
 multithreading = ["rayon"]
 serializer = ["serde", "serde_json"]
-rabbit = ["amqprs", "serializer"]
+rabbit = ["lapin", "serializer", "async"]
 
 full = ["derive", "async", "multithreading", "serializer", "rabbit"]
 
-[dependencies.amqprs]
+[dependencies.lapin]
 version = "1"
 optional = true
 

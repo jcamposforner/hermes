@@ -8,6 +8,6 @@ pub mod serde_serialize;
 mod error;
 mod serialized_event;
 
-pub trait EventSerializer {
+pub trait EventSerializer: Send + Sync + 'static {
     fn serialize<T: Event + EventIdentifiable + Serialize>(&self, event: &T) -> Result<String, SerializeError>;
 }

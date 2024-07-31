@@ -7,6 +7,7 @@ use std::sync::Arc;
 use downcaster::{Downcast, downcast_ref};
 
 use crate::bus::AsynchronousEventBus;
+use crate::bus::error::PublishError;
 use crate::event::Event;
 use crate::subscriber::AsyncSubscriber;
 
@@ -47,7 +48,7 @@ impl TokioEventBus {
 }
 
 impl AsynchronousEventBus for TokioEventBus {
-    async fn publish<T: Event>(&self, event: T) {
+    async fn publish<T: Event>(&self, event: T) -> Result<(), PublishError> {
         let event_type = TypeId::of::<T>();
         let event = Arc::new(event);
 
@@ -67,6 +68,8 @@ impl AsynchronousEventBus for TokioEventBus {
                 }
             }
         }
+
+        Ok(())
     }
 }
 
@@ -107,7 +110,7 @@ macro_rules! async_publish_all {
         $(
             let event_bus_clone = $bus.clone();
             let handle = tokio::spawn(async move {
-                event_bus_clone.publish($event).await;
+                let _ = event_bus_clone.publish($event).await;
             });
             handles.push(handle);
         )+
@@ -126,17 +129,32 @@ macro_rules! async_publish_all {
 #[cfg(test)]
 mod tests {
     use std::time::Duration;
-
+    use serde::Serialize;
     use tokio::sync::mpsc::Sender;
     use tokio::time::{Instant, sleep};
-
+    use crate::event::EventIdentifiable;
     use super::*;
 
+    #[derive(Serialize)]
     struct TestEvent {}
 
     impl Event for TestEvent {}
 
+    impl EventIdentifiable for TestEvent {
+        fn event_name() -> &'static str {
+            "test_event"
+        }
+    }
+
+    #[derive(Serialize)]
     struct OtherTestEvent {}
+
+    impl EventIdentifiable for OtherTestEvent {
+        fn event_name() -> &'static str {
+            "other_test_event"
+        }
+    }
+
 
     impl Event for OtherTestEvent {}
 
@@ -169,7 +187,7 @@ mod tests {
         }));
 
         event_bus.register(Arc::new(OtherEventHandler {}));
-        event_bus.publish(TestEvent {}).await;
+        let _ = event_bus.publish(TestEvent {}).await;
 
         let total_messages_received = rx.recv().await.unwrap();
 
