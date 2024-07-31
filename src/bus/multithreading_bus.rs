@@ -129,11 +129,7 @@ mod tests {
         tx: Sender<bool>
     }
 
-    impl Event for TestEvent {
-        fn event_name(&self) -> &'static str {
-            "test_event"
-        }
-    }
+    impl Event for TestEvent {}
 
     struct TestEventHandler {}
 

@@ -14,13 +14,17 @@ hermes-derive = { path = "hermes-derive", optional = true }
 derive = ["hermes-derive"]
 async = ["tokio"]
 multithreading = ["rayon"]
-serializer = ["serde"]
+serializer = ["serde", "serde_json"]
 
 full = ["derive", "async", "multithreading", "serializer"]
 
 [dependencies.serde]
 version = "1"
 features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1"
 optional = true
 
 [dependencies.tokio]

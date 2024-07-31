@@ -134,19 +134,11 @@ mod tests {
 
     struct TestEvent {}
 
-    impl Event for TestEvent {
-        fn event_name(&self) -> &'static str {
-            "test_event"
-        }
-    }
+    impl Event for TestEvent {}
 
     struct OtherTestEvent {}
 
-    impl Event for OtherTestEvent {
-        fn event_name(&self) -> &'static str {
-            "other_test_event"
-        }
-    }
+    impl Event for OtherTestEvent {}
 
     struct TestEventHandler {
         sender: Sender<u8>
