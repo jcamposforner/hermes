@@ -16,13 +16,17 @@ pub struct RabbitEventBus<'a, T: EventSerializer> {
 }
 
 impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
-    pub async fn new(connection: Connection, serializer: &'a T, exchange: String) -> Self {
-        Self {
+    pub async fn new(connection: Connection, serializer: &'a T, exchange: String) -> Result<Self, Box<dyn Error>> {
+        let mut event_bus = Self {
             connection,
             serializer,
             exchange,
             channel: None,
-        }
+        };
+
+        event_bus.recreate_channel().await?;
+
+        Ok(event_bus)
     }
 
     async fn recreate_channel(&mut self) -> Result<Option<&Channel>, Box<dyn Error>> {
