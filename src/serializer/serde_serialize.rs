@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-use crate::event::{Event, EventIdentifiable};
+use crate::event::{Event};
 use crate::serializer::error::SerializeError;
 use crate::serializer::EventSerializer;
 use crate::serializer::serialized_event::{EventSerializable, EventSerializableData, EventSerializableMeta};
@@ -8,9 +8,9 @@ use crate::serializer::serialized_event::{EventSerializable, EventSerializableDa
 pub struct SerdeJSONEventSerializer;
 
 impl EventSerializer for SerdeJSONEventSerializer {
-    fn serialize<T: Event + EventIdentifiable + Serialize>(&self, event: &T) -> Result<String, SerializeError> {
+    fn serialize<T: Event + Serialize>(&self, event: &T) -> Result<String, SerializeError> {
         let event_serializable = EventSerializable::new(
-            EventSerializableData::new(T::event_name(), event),
+            EventSerializableData::new(event.event_name(), event),
             EventSerializableMeta {}
         );
 
@@ -28,14 +28,12 @@ mod tests {
         id: String
     }
 
-    impl Event for SerializableEvent {}
-
-    impl EventIdentifiable for SerializableEvent {
-        fn event_name() -> &'static str {
+    impl Event for SerializableEvent {
+        fn event_name(&self) -> &'static str {
             "serializable_event"
         }
     }
-
+    
     #[test]
     fn it_should_serialize_event_and_add_event_name() {
         let event = SerializableEvent { id: "1".to_string() };

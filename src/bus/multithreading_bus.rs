@@ -130,6 +130,9 @@ mod tests {
     }
 
     impl Event for TestEvent {
+        fn event_name(&self) -> &'static str {
+            "test_event"
+        }
     }
 
     struct TestEventHandler {}

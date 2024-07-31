@@ -67,11 +67,19 @@ mod tests {
 
     struct TestEvent {}
 
-    impl Event for TestEvent {}
+    impl Event for TestEvent {
+        fn event_name(&self) -> &'static str {
+            "test_event"
+        }
+    }
 
     struct OtherTestEvent {}
 
-    impl Event for OtherTestEvent {}
+    impl Event for OtherTestEvent {
+        fn event_name(&self) -> &'static str {
+            "other_test_event"
+        }
+    }
 
     struct TestEventHandler {
         total_messages_received: RefCell<u32>

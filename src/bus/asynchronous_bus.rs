@@ -104,6 +104,26 @@ macro_rules! impl_async_event_handler {
 
 #[macro_export]
 macro_rules! async_publish_all {
+    ($bus:expr, $events:expr) => {{
+        let mut handles = vec![];
+
+        for event in $events {
+            let event_bus_clone = $bus.clone();
+            let handle = tokio::spawn(async move {
+                let _ = event_bus_clone.publish(event).await;
+            });
+            handles.push(handle);
+        }
+
+        for handle in handles {
+            match handle.await {
+                Ok(_) => {},
+                Err(e) => {
+                    log::error!("Error while processing event: {:?}", e);
+                }
+            }
+        }
+    }};
     ($bus:expr, $($event:expr),+) => {{
         let mut handles = vec![];
 
@@ -132,16 +152,13 @@ mod tests {
     use serde::Serialize;
     use tokio::sync::mpsc::Sender;
     use tokio::time::{Instant, sleep};
-    use crate::event::EventIdentifiable;
     use super::*;
 
     #[derive(Serialize)]
     struct TestEvent {}
 
-    impl Event for TestEvent {}
-
-    impl EventIdentifiable for TestEvent {
-        fn event_name() -> &'static str {
+    impl Event for TestEvent {
+        fn event_name(&self) -> &'static str {
             "test_event"
         }
     }
@@ -149,14 +166,12 @@ mod tests {
     #[derive(Serialize)]
     struct OtherTestEvent {}
 
-    impl EventIdentifiable for OtherTestEvent {
-        fn event_name() -> &'static str {
+
+    impl Event for OtherTestEvent {
+        fn event_name(&self) -> &'static str {
             "other_test_event"
         }
     }
-
-
-    impl Event for OtherTestEvent {}
 
     struct TestEventHandler {
         sender: Sender<u8>

@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::bus::error::PublishError;
-use crate::event::{Event, EventIdentifiable};
+use crate::event::{Event};
 
 pub mod synchronous_bus;
 
@@ -24,7 +24,7 @@ pub trait EventBus {
 #[cfg(feature = "async")]
 #[allow(async_fn_in_trait)]
 pub trait AsynchronousEventBus {
-    async fn publish<E: Event + EventIdentifiable + Serialize>(&self, event: E) -> Result<(), PublishError>;
+    async fn publish<E: Event + Serialize>(&self, event: E) -> Result<(), PublishError>;
 }
 
 #[macro_export]
