@@ -46,7 +46,7 @@ impl<T: EventSerializer> AsynchronousEventBus for RabbitEventBus<'_, T> {
 
 impl<T: EventSerializer> RabbitEventBus<'_, T> {
     async fn publish_message<E: Event + Serialize>(&self, event: &E, channel: &Channel) -> Result<(), PublishError> {
-        let payload = self.serializer.serialize(&event).map_err(|_| PublishError::CannotSerializeEvent)?;
+        let payload = self.serializer.serialize(event).map_err(|_| PublishError::CannotSerializeEvent)?;
 
         let publish_message = channel
             .basic_publish(

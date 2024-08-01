@@ -41,7 +41,7 @@ impl Default for MultithreadingEventBus {
     fn default() -> Self {
         Self {
             subscribers: HashMap::default(),
-            thread_pool: ThreadPoolBuilder::new().build().unwrap(),
+            thread_pool: ThreadPoolBuilder::new().build().expect("Error creating thread pool"),
         }
     }
 }
