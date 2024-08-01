@@ -6,10 +6,10 @@ use crate::serializer::deserialized_event::EventDeserializable;
 use crate::serializer::error::{DeserializeError, SerializeError};
 
 pub mod serde_formatter;
+pub mod deserialized_event;
 
 mod error;
 mod serialized_event;
-mod deserialized_event;
 
 pub trait EventSerializer: Send + Sync + 'static {
     fn serialize<T: Event + Serialize>(&self, event: &T) -> Result<String, SerializeError>;
