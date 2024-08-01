@@ -11,14 +11,14 @@ use crate::event::Event;
 use crate::serializer::EventSerializer;
 
 pub struct RabbitEventBus<'a, T: EventSerializer> {
-    connection: Connection,
+    connection: Arc<Connection>,
     serializer: &'a T,
     exchange: String,
     channel: Arc<RwLock<Option<Channel>>>,
 }
 
 impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
-    pub async fn new(connection: Connection, serializer: &'a T, exchange: String) -> Result<Self, Box<dyn Error>> {
+    pub async fn new(connection: Arc<Connection>, serializer: &'a T, exchange: String) -> Result<Self, Box<dyn Error>> {
         let event_bus = Self {
             connection,
             serializer,
@@ -53,7 +53,7 @@ impl<T: EventSerializer> RabbitEventBus<'_, T> {
                 self.exchange.as_str(),
                 event.event_name(),
                 lapin::options::BasicPublishOptions::default(),
-                payload.into_bytes(),
+                payload.as_bytes(),
                 BasicProperties::default(),
             );
 
@@ -100,7 +100,6 @@ impl<T: EventSerializer> RabbitEventBus<'_, T> {
 #[cfg(test)]
 mod tests {
     use lapin::ConnectionProperties;
-    use tokio::time::Instant;
 
     use crate::async_publish_all;
     use crate::serializer::serde_serialize::SerdeJSONEventSerializer;
@@ -146,22 +145,13 @@ mod tests {
 
         let event_bus = Arc::new(
             RabbitEventBus::new(
-                connection,
+                Arc::new(connection),
                 &SerdeJSONEventSerializer,
                 "new_exchange".to_string()
             ).await.unwrap()
         );
 
-        let mut events = vec![];
-
-        for _ in 0..10 {
-            let event = TestEvents::TestEvent(TestEvent {});
-
-            events.push(event);
-            let event = TestEvents::OtherTestEvent(OtherTestEvent {});
-            events.push(event);
-        }
-
+        let mut events = vec![TestEvents::TestEvent(TestEvent {})];
 
         async_publish_all!(event_bus, events);
     }

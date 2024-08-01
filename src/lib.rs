@@ -6,6 +6,7 @@ pub mod bus;
 
 #[cfg(feature = "serializer")]
 pub mod serializer;
+mod consumer;
 
 #[cfg(feature = "derive")]
 pub mod derive {

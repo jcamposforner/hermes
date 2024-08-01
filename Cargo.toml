@@ -15,12 +15,16 @@ derive = ["hermes-derive"]
 async = ["tokio", "serializer"]
 multithreading = ["rayon"]
 serializer = ["serde", "serde_json"]
-rabbit = ["lapin", "serializer", "async"]
+rabbit = ["lapin", "serializer", "async", "futures-lite"]
 
 full = ["derive", "async", "multithreading", "serializer", "rabbit"]
 
+[dependencies.futures-lite]
+version = "2"
+optional = true
+
 [dependencies.lapin]
-version = "1"
+version = "2"
 optional = true
 
 [dependencies.serde]
