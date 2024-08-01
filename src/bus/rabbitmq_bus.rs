@@ -52,12 +52,12 @@ impl<T: EventSerializer> RabbitEventBus<'_, T> {
                 BasicProperties::default(),
             );
 
-
         publish_message
             .await
             .map_err(|_| PublishError::CannotOpenChannel)?
             .await
             .map_err(|_| PublishError::CannotPublishEvent)?;
+
         Ok(())
     }
 }

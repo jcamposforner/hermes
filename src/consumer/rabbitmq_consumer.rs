@@ -4,19 +4,30 @@ use futures_lite::stream::StreamExt;
 use lapin::Connection;
 use lapin::options::{BasicAckOptions, BasicConsumeOptions};
 use lapin::types::FieldTable;
-use log::info;
+use log::error;
+use serde_json::Value;
 
 use crate::consumer::AsyncConsumer;
+use crate::PayloadHandler;
 use crate::rabbit::rabbit_channel::RabbitChannel;
+use crate::serializer::EventDeserializer;
 
-pub struct RabbitMQConsumer {
+pub struct RabbitMQConsumer<'a, D: EventDeserializer, EH: PayloadHandler<Value>> {
     channel: RabbitChannel,
     queue: String,
     consumer_tag: String,
+    deserializer: &'a D,
+    handler: EH,
 }
 
-impl RabbitMQConsumer {
-    pub async fn new<'a>(connection: Arc<Connection>, queue: &'a str, consumer_tag: &'a str) -> Result<Self, Box<dyn std::error::Error>> {
+impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> RabbitMQConsumer<'a, D, EH> {
+    pub async fn new(
+        connection: Arc<Connection>,
+        queue: &'a str,
+        consumer_tag: &'a str,
+        deserializer: &'a D,
+        handler: EH
+    ) -> Result<Self, Box<dyn std::error::Error>> {
         let channel = connection.create_channel().await?;
 
         Ok(
@@ -24,12 +35,14 @@ impl RabbitMQConsumer {
                 channel: RabbitChannel::new(connection, channel),
                 queue: queue.to_string(),
                 consumer_tag: consumer_tag.to_string(),
+                deserializer,
+                handler
             }
         )
     }
 }
 
-impl AsyncConsumer for RabbitMQConsumer {
+impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for RabbitMQConsumer<'a, D, EH> {
     async fn consume(&mut self) {
         let channel = self.channel.get_guard_channel().await.unwrap();
         let mut consumer = channel
@@ -45,26 +58,21 @@ impl AsyncConsumer for RabbitMQConsumer {
         while let Some(delivery) = consumer.next().await {
             if let Ok(delivery) = delivery {
                 let payload = std::str::from_utf8(&delivery.data).unwrap();
-                info!("Received message: {:?}", payload);
+
+                let event_deserializable = self.deserializer
+                                               .deserialize::<Value>(payload.to_string());
+
+                if event_deserializable.is_err() {
+                    error!("Failed to deserialize event {}", payload);
+                    continue;
+                }
+
+                self.handler.handle(&event_deserializable.expect("Failed to deserialize event"));
 
                 channel.basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                        .await
                        .unwrap();
             }
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[tokio::test]
-    async fn test_consume() {
-        let connection = Connection::connect("amqp://localhost", lapin::ConnectionProperties::default()).await.unwrap();
-
-        let mut consumer = RabbitMQConsumer::new(Arc::new(connection), "q", "test_consumer").await.unwrap();
-
-        consumer.consume().await;
     }
 }

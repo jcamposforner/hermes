@@ -22,7 +22,7 @@ impl EventSerializer for SerdeJSONEventFormatter {
 }
 
 impl EventDeserializer for SerdeJSONEventFormatter {
-    fn deserialize<T: Event + DeserializeOwned + Serialize>(&self, raw_event: String) -> Result<EventDeserializable<T>, DeserializeError> {
+    fn deserialize<T: DeserializeOwned + Serialize>(&self, raw_event: String) -> Result<EventDeserializable<T>, DeserializeError> {
         serde_json::from_str::<EventDeserializable<T>>(&raw_event)
             .map_err(|_| DeserializeError::UnableToDeserializeEvent)
     }

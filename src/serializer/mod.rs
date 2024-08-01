@@ -16,5 +16,5 @@ pub trait EventSerializer: Send + Sync + 'static {
 }
 
 pub trait EventDeserializer: Send + Sync + 'static {
-    fn deserialize<T: Event + DeserializeOwned + Serialize>(&self, raw_event: String) -> Result<EventDeserializable<T>, DeserializeError>;
+    fn deserialize<T: DeserializeOwned + Serialize>(&self, raw_event: String) -> Result<EventDeserializable<T>, DeserializeError>;
 }
