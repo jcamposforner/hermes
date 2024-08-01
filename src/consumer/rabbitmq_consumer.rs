@@ -7,8 +7,7 @@ use lapin::types::FieldTable;
 use log::error;
 use serde_json::Value;
 
-use crate::consumer::AsyncConsumer;
-use crate::PayloadHandler;
+use crate::consumer::{AsyncConsumer, PayloadHandler, PayloadHandlerError};
 use crate::rabbit::rabbit_channel::RabbitChannel;
 use crate::serializer::EventDeserializer;
 
@@ -67,11 +66,25 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
                     continue;
                 }
 
-                self.handler.handle(&event_deserializable.expect("Failed to deserialize event"));
+                let result = self.handler.handle(&event_deserializable.expect("Failed to deserialize event"));
 
-                channel.basic_ack(delivery.delivery_tag, BasicAckOptions::default())
-                       .await
-                       .unwrap();
+                match result {
+                    Ok(_) => {
+                        channel.basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+                               .await
+                               .unwrap();
+                    },
+                    Err(PayloadHandlerError::UnrecoverableError) => {
+                        error!("Unrecoverable error while handling event {}", payload);
+                        channel.basic_ack(delivery.delivery_tag, BasicAckOptions::default())
+                               .await
+                               .unwrap();
+                    },
+                    Err(PayloadHandlerError::Inner(e)) => {
+                        error!("Error while handling event {}: {}", payload, e);
+                        // TODO: Retry logic
+                    }
+                }
             }
         }
     }
