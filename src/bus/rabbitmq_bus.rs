@@ -3,7 +3,7 @@ use std::sync::Arc;
 
 use lapin::{BasicProperties, Channel, Connection};
 use serde::Serialize;
-use tokio::sync::RwLock;
+use tokio::sync::{RwLock, RwLockReadGuard};
 
 use crate::bus::AsynchronousEventBus;
 use crate::bus::error::PublishError;
@@ -30,40 +30,22 @@ impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
 
         Ok(event_bus)
     }
-
-    async fn recreate_channel(&self) -> Result<(), PublishError> {
-        let mut write_guard = self.channel.write().await;
-        if write_guard.is_none() {
-            let channel = self.connection.create_channel().await.map_err(|_| PublishError::CannotOpenChannel)?;
-            *write_guard = Some(channel);
-        }
-
-        drop(write_guard);
-
-        Ok(())
-    }
 }
 
 impl<T: EventSerializer> AsynchronousEventBus for RabbitEventBus<'_, T> {
     async fn publish<E: Event + Serialize>(&self, event: E) -> Result<(), PublishError> {
-        let read_guard = self.channel.read().await;
+        let read_guard = self.get_guard_channel().await?;
 
         let channel = read_guard
             .as_ref()
             .ok_or(PublishError::CannotOpenChannel)?;
 
-        let is_connected = channel.status().connected();
-        if !is_connected {
-            drop(read_guard);
-            self.recreate_channel().await?;
-        }
+        self.publish_message(&event, channel).await
+    }
+}
 
-        let read_guard = self.channel.read().await;
-
-        let channel = read_guard
-            .as_ref()
-            .ok_or(PublishError::CannotOpenChannel)?;
-
+impl<T: EventSerializer> RabbitEventBus<'_, T> {
+    async fn publish_message<E: Event + Serialize>(&self, event: &E, channel: &Channel) -> Result<(), PublishError> {
         let payload = self.serializer.serialize(&event).map_err(|_| PublishError::CannotSerializeEvent)?;
 
         let publish_message = channel
@@ -80,8 +62,38 @@ impl<T: EventSerializer> AsynchronousEventBus for RabbitEventBus<'_, T> {
             .map_err(|_| PublishError::CannotOpenChannel)?
             .await
             .map_err(|_| PublishError::CannotPublishEvent)?;
+        Ok(())
+    }
+}
+
+impl<T: EventSerializer> RabbitEventBus<'_, T> {
+    async fn recreate_channel(&self) -> Result<(), PublishError> {
+        let mut write_guard = self.channel.write().await;
+        if write_guard.is_none() {
+            let channel = self.connection.create_channel().await.map_err(|_| PublishError::CannotOpenChannel)?;
+            *write_guard = Some(channel);
+        }
+
+        drop(write_guard);
 
         Ok(())
+    }
+
+    async fn get_guard_channel(&self) -> Result<RwLockReadGuard<Option<Channel>>, PublishError> {
+        let read_guard = self.channel.read().await;
+
+        let channel = read_guard
+            .as_ref()
+            .ok_or(PublishError::CannotOpenChannel)?;
+
+        let is_connected = channel.status().connected();
+        if !is_connected {
+            drop(read_guard);
+            self.recreate_channel().await?;
+        }
+
+        let read_guard = self.channel.read().await;
+        Ok(read_guard)
     }
 }
 
