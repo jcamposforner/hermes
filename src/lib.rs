@@ -6,6 +6,8 @@ pub mod bus;
 
 #[cfg(feature = "serializer")]
 pub mod serializer;
+
+#[cfg(feature = "rabbit")]
 pub mod consumer;
 
 #[cfg(feature = "rabbit")]
