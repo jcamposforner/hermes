@@ -11,6 +11,9 @@ pub mod consumer;
 #[cfg(feature = "rabbit")]
 pub mod rabbit;
 
+#[cfg(feature = "rabbit")]
+pub mod event_router;
+
 #[cfg(feature = "derive")]
 pub mod derive {
     pub use hermes_derive::Event;

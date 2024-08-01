@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use futures_lite::stream::StreamExt;
-use lapin::{Channel, Connection};
+use lapin::Connection;
 use lapin::options::{BasicAckOptions, BasicConsumeOptions};
 use lapin::types::FieldTable;
 use log::info;
@@ -32,14 +32,15 @@ impl RabbitMQConsumer {
 impl AsyncConsumer for RabbitMQConsumer {
     async fn consume(&mut self) {
         let channel = self.channel.get_guard_channel().await.unwrap();
-        let mut consumer = channel.basic_consume(
-            &self.queue,
-            &self.consumer_tag,
-            BasicConsumeOptions::default(),
-            FieldTable::default(),
-        )
-                                  .await
-                                  .unwrap();
+        let mut consumer = channel
+            .basic_consume(
+                &self.queue,
+                &self.consumer_tag,
+                BasicConsumeOptions::default(),
+                FieldTable::default(),
+            )
+            .await
+            .unwrap();
 
         while let Some(delivery) = consumer.next().await {
             if let Ok(delivery) = delivery {

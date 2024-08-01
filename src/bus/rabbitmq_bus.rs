@@ -75,7 +75,7 @@ mod tests {
     use lapin::ConnectionProperties;
 
     use crate::async_publish_all;
-    use crate::serializer::serde_serialize::SerdeJSONEventSerializer;
+    use crate::serializer::serde_formatter::SerdeJSONEventFormatter;
 
     use super::*;
 
@@ -89,25 +89,14 @@ mod tests {
     }
 
     #[derive(Serialize)]
-    struct OtherTestEvent {}
-
-    impl Event for OtherTestEvent {
-        fn event_name(&self) -> &'static str {
-            "other_test_event"
-        }
-    }
-
-    #[derive(Serialize)]
     enum TestEvents {
         TestEvent(TestEvent),
-        OtherTestEvent(OtherTestEvent),
     }
 
     impl Event for TestEvents {
         fn event_name(&self) -> &'static str {
             match self {
                 TestEvents::TestEvent(event) => event.event_name(),
-                TestEvents::OtherTestEvent(event) => event.event_name(),
             }
         }
     }
@@ -119,7 +108,7 @@ mod tests {
         let event_bus = Arc::new(
             RabbitEventBus::new(
                 Arc::new(connection),
-                &SerdeJSONEventSerializer,
+                &SerdeJSONEventFormatter,
                 "new_exchange".to_string()
             ).await.unwrap()
         );
