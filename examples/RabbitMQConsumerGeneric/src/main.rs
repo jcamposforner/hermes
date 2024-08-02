@@ -1,15 +1,11 @@
 use std::fmt::Debug;
 
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use hermes::consumer::PayloadHandler;
-use hermes::consumer::PayloadHandlerError;
 use hermes::event::Event;
-use hermes::impl_async_event_handler;
 use hermes::impl_payload_handler;
 use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData, EventDeserializableMeta};
-use hermes::subscriber::AsyncSubscriber;
 
 #[derive(Debug, Serialize, Deserialize)]
 struct ChatMessageSent {
@@ -57,7 +53,7 @@ async fn main() {
     let json = serde_json::to_value(&event).unwrap();
     let mut handler = SendNotificationOnChatMessageSent;
 
-    let message_from_rabbit: EventDeserializable<Value> = EventDeserializable {
+    let message_from_rabbit = EventDeserializable {
         data: EventDeserializableData {
             event_name: event.event_name().to_string(),
             attributes: json,
@@ -72,7 +68,7 @@ async fn main() {
     };
     let json = serde_json::to_value(&event).unwrap();
 
-    let message_from_rabbit: EventDeserializable<Value> = EventDeserializable {
+    let message_from_rabbit = EventDeserializable {
         data: EventDeserializableData {
             event_name: event.event_name().to_string(),
             attributes: json,

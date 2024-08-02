@@ -8,4 +8,8 @@ pub trait Event: AsAny + Sync + Send + 'static {
     }
 }
 
+pub trait EventName {
+    fn static_event_name() -> &'static str;
+}
+
 pub trait DomainEvent: Event {}

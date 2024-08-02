@@ -4,34 +4,20 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 
 use hermes::consumer::PayloadHandler;
-use hermes::consumer::PayloadHandlerError;
+use hermes::derive::Event;
 use hermes::event::Event;
-use hermes::impl_async_event_handler;
 use hermes::impl_payload_handler;
 use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData, EventDeserializableMeta};
-use hermes::subscriber::AsyncSubscriber;
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Event)]
 struct ChatMessageSent {
     pub message: String,
     pub user: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Event)]
 struct ChatMessageReceived {
     pub message: String,
-}
-
-impl Event for ChatMessageSent {
-    fn event_name(&self) -> &'static str {
-        "chat_message_sent"
-    }
-}
-
-impl Event for ChatMessageReceived {
-    fn event_name(&self) -> &'static str {
-        "chat_message_received"
-    }
 }
 
 struct SendNotificationOnChatMessageSent;
@@ -48,8 +34,8 @@ impl SendNotificationOnChatMessageSent {
 
 impl_payload_handler!(
     SendNotificationOnChatMessageSent,
-    ("chat_message_sent", ChatMessageSent, on_chat_message_sent),
-    ("chat_message_received", ChatMessageReceived, on_chat_message_received)
+    (ChatMessageSent, on_chat_message_sent),
+    (ChatMessageReceived, on_chat_message_received)
 );
 
 #[tokio::main]
