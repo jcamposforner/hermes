@@ -37,19 +37,15 @@ impl Event for ChatMessageReceived {
 struct SendNotificationOnChatMessageSent;
 
 impl SendNotificationOnChatMessageSent {
-    async fn on_chat_message_sent(&self, event: &ChatMessageSent) {
-        println!("Handling message sent: {:?}", event);
-    }
-
-    async fn on_chat_message_received(&self, event: &ChatMessageReceived) {
-        println!("Handling message received: {:?}", event);
+    async fn on<T: Event + Debug>(&self, event: &T) {
+        println!("Handling message event: {:?}", event);
     }
 }
 
 impl_payload_handler!(
     SendNotificationOnChatMessageSent,
-    ("chat_message_sent", ChatMessageSent, on_chat_message_sent),
-    ("chat_message_received", ChatMessageReceived, on_chat_message_received)
+    ("chat_message_sent", ChatMessageSent),
+    ("chat_message_received", ChatMessageReceived)
 );
 
 #[tokio::main]

@@ -38,7 +38,7 @@ pub trait PayloadHandler<T: Serialize + DeserializeOwned> {
 
 #[macro_export]
 macro_rules! impl_payload_handler {
-    ($struct_name:ident, $(($event_name:literal, $event_type:ident, $method_name:ident)),* )=> {
+    ($struct_name:ident, $(($event_name:expr, $event_type:ident, $method_name:ident)),* )=> {
         $(
             impl_async_event_handler!($struct_name, $method_name, $event_type);
         )*
@@ -52,6 +52,29 @@ macro_rules! impl_payload_handler {
                     if event_name == $event_name {
                         let event = serde_json::from_value::<$event_type>(attr).unwrap();
                         self.$method_name(&event).await;
+                        return Ok(());
+                    }
+                )*
+
+                Err(PayloadHandlerError::UnrecoverableError)
+            }
+        }
+    };
+
+    ($struct_name:ident, $(($event_name:expr, $event_type:ident)),* )=> {
+        $(
+            impl_async_event_handler!($struct_name, $event_type);
+        )*
+
+        impl PayloadHandler<Value> for $struct_name {
+            async fn handle_value_payload(&mut self, payload: &EventDeserializable<Value>) -> Result<(), PayloadHandlerError> {
+                let attr = payload.data.attributes.clone();
+                let event_name = payload.data.event_name.as_str();
+
+                $(
+                    if event_name == $event_name {
+                        let event = serde_json::from_value::<$event_type>(attr).unwrap();
+                        self.on(&event).await;
                         return Ok(());
                     }
                 )*
