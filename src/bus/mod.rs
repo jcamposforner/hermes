@@ -31,7 +31,7 @@ pub trait AsynchronousEventBus {
 macro_rules! impl_event_handler {
     ($struct_name:ident, $method_name:ident, $($event:ident), *) => {
         $(
-            impl Subscriber<$event> for $struct_name {
+            impl hermes::Subscriber<$event> for $struct_name {
                 fn handle_event(&self, event: &$event) {
                     self.$method_name(event);
                 }
@@ -40,7 +40,7 @@ macro_rules! impl_event_handler {
     };
     ($struct_name:ident, $($event:ident), *) => {
         $(
-            impl Subscriber<$event> for $struct_name {
+            impl hermes::Subscriber<$event> for $struct_name {
                 fn handle_event(&self, event: &$event) {
                     self.on(event);
                 }
@@ -48,7 +48,7 @@ macro_rules! impl_event_handler {
         )*
     };
     ($struct_name:ident) => {
-        impl<T: Event> Subscriber<T> for $struct_name {
+        impl<T: hermes::Event> hermes::Subscriber<T> for $struct_name {
             fn handle_event(&self, event: &T) {
                 self.on(event);
             }
