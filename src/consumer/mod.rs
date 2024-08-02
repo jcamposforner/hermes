@@ -82,6 +82,28 @@ macro_rules! impl_payload_handler {
             }
         }
     };
+    ($struct_name:ident, $($event_type:ident),* )=> {
+        $(
+            $crate::impl_async_event_handler!($struct_name, $event_type);
+        )*
+
+        impl $crate::consumer::PayloadHandler<serde_json::Value> for $struct_name {
+            async fn handle_value_payload(&mut self, payload: &$crate::serializer::deserialized_event::EventDeserializable<serde_json::Value>) -> Result<(), $crate::consumer::PayloadHandlerError> {
+                let attr = payload.data.attributes.clone();
+                let event_name = payload.data.event_name.as_str();
+
+                $(
+                    if event_name == <$event_type as $crate::event::EventName>::static_event_name() {
+                        let event = serde_json::from_value::<$event_type>(attr).unwrap();
+                        self.on(&event).await;
+                        return Ok(());
+                    }
+                )*
+
+                Err($crate::consumer::PayloadHandlerError::UnrecoverableError)
+            }
+        }
+    };
     ($struct_name:ident, $(($event_name:expr, $event_type:ident)),* )=> {
         $(
             $crate::impl_async_event_handler!($struct_name, $event_type);

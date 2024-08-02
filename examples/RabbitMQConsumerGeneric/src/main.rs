@@ -3,31 +3,20 @@ use std::fmt::Debug;
 use serde::{Deserialize, Serialize};
 
 use hermes::consumer::PayloadHandler;
+use hermes::derive::Event;
 use hermes::event::Event;
 use hermes::impl_payload_handler;
 use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData, EventDeserializableMeta};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Event)]
 struct ChatMessageSent {
     pub message: String,
     pub user: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Event)]
 struct ChatMessageReceived {
     pub message: String,
-}
-
-impl Event for ChatMessageSent {
-    fn event_name(&self) -> &'static str {
-        "chat_message_sent"
-    }
-}
-
-impl Event for ChatMessageReceived {
-    fn event_name(&self) -> &'static str {
-        "chat_message_received"
-    }
 }
 
 struct SendNotificationOnChatMessageSent;
@@ -40,8 +29,8 @@ impl SendNotificationOnChatMessageSent {
 
 impl_payload_handler!(
     SendNotificationOnChatMessageSent,
-    ("chat_message_sent", ChatMessageSent),
-    ("chat_message_received", ChatMessageReceived)
+    ChatMessageSent,
+    ChatMessageReceived
 );
 
 #[tokio::main]
