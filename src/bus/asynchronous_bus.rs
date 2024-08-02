@@ -77,7 +77,7 @@ impl AsynchronousEventBus for TokioEventBus {
 macro_rules! impl_async_event_handler {
     ($struct_name:ident, $method_name:ident, $($event:ident), *) => {
         $(
-            impl hermes::subscriber::AsyncSubscriber<$event> for $struct_name {
+            impl $crate::subscriber::AsyncSubscriber<$event> for $struct_name {
                 async fn handle_event(&self, event: &$event) {
                     self.$method_name(event).await;
                 }
@@ -86,7 +86,7 @@ macro_rules! impl_async_event_handler {
     };
     ($struct_name:ident, $($event:ident), *) => {
         $(
-            impl hermes::subscriber::AsyncSubscriber<$event> for $struct_name {
+            impl $crate::subscriber::AsyncSubscriber<$event> for $struct_name {
                 async fn handle_event(&self, event: &$event) {
                     self.on(event).await;
                 }
@@ -94,7 +94,7 @@ macro_rules! impl_async_event_handler {
         )*
     };
     ($struct_name:ident) => {
-        impl<T: hermes::Event> hermes::subscriber::AsyncSubscriber<T> for $struct_name {
+        impl<T: $crate::Event> $crate::subscriber::AsyncSubscriber<T> for $struct_name {
             async fn handle_event(&self, event: &T) {
                 self.on(event).await;
             }
