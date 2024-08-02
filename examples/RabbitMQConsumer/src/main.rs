@@ -8,6 +8,7 @@ use hermes::derive::Event;
 use hermes::event::Event;
 use hermes::impl_payload_handler;
 use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData, EventDeserializableMeta};
+use hermes::subscriber::SubscriberError;
 
 #[derive(Debug, Serialize, Deserialize, Event)]
 struct ChatMessageSent {
@@ -23,12 +24,14 @@ struct ChatMessageReceived {
 struct SendNotificationOnChatMessageSent;
 
 impl SendNotificationOnChatMessageSent {
-    async fn on_chat_message_sent(&self, event: &ChatMessageSent) {
+    async fn on_chat_message_sent(&self, event: &ChatMessageSent) -> Result<(), SubscriberError> {
         println!("Handling message sent: {:?}", event);
+        Ok(())
     }
 
-    async fn on_chat_message_received(&self, event: &ChatMessageReceived) {
+    async fn on_chat_message_received(&self, event: &ChatMessageReceived) -> Result<(), SubscriberError> {
         println!("Handling message received: {:?}", event);
+        Ok(())
     }
 }
 

@@ -35,7 +35,8 @@ impl TokioEventBus {
             Box::pin(async move {
                 let event = event.as_ref();
                 if let Some(event) = downcast_ref!(event, E) {
-                    value.handle_event(event).await;
+                    // TODO: Handle errors
+                    let _ = value.handle_event(event).await;
                 }
             })
         });
@@ -78,8 +79,8 @@ macro_rules! impl_async_event_handler {
     ($struct_name:ident, $method_name:ident, $($event:ident), *) => {
         $(
             impl $crate::subscriber::AsyncSubscriber<$event> for $struct_name {
-                async fn handle_event(&self, event: &$event) {
-                    self.$method_name(event).await;
+                async fn handle_event(&self, event: &$event) -> Result<(), $crate::subscriber::SubscriberError> {
+                    self.$method_name(event).await
                 }
             }
         )*
@@ -87,16 +88,16 @@ macro_rules! impl_async_event_handler {
     ($struct_name:ident, $($event:ident), *) => {
         $(
             impl $crate::subscriber::AsyncSubscriber<$event> for $struct_name {
-                async fn handle_event(&self, event: &$event) {
-                    self.on(event).await;
+                async fn handle_event(&self, event: &$event) -> Result<(), $crate::subscriber::SubscriberError> {
+                    self.on(event).await
                 }
             }
         )*
     };
     ($struct_name:ident) => {
         impl<T: $crate::Event> $crate::subscriber::AsyncSubscriber<T> for $struct_name {
-            async fn handle_event(&self, event: &T) {
-                self.on(event).await;
+            async fn handle_event(&self, event: &T) -> Result<(), $crate::subscriber::SubscriberError> {
+                self.on(event).await
             }
         }
     };
@@ -154,6 +155,8 @@ mod tests {
     use tokio::sync::mpsc::Sender;
     use tokio::time::{Instant, sleep};
 
+    use crate::subscriber::SubscriberError;
+
     use super::*;
 
     #[derive(Serialize)]
@@ -180,15 +183,18 @@ mod tests {
     }
 
     impl TestEventHandler {
-        async fn on_test_event(&self, _event: &TestEvent) {
+        async fn on_test_event(&self, _event: &TestEvent) -> Result<(), SubscriberError> {
             self.sender.send(1).await.unwrap();
+            Ok(())
         }
     }
 
     struct OtherEventHandler {}
 
     impl OtherEventHandler {
-        async fn on_test_event(&self, _event: &TestEvent) {}
+        async fn on_test_event(&self, _event: &TestEvent) -> Result<(), SubscriberError> {
+            Ok(())
+        }
     }
 
     impl_async_event_handler!(OtherEventHandler, on_test_event, TestEvent);
@@ -216,8 +222,9 @@ mod tests {
     }
 
     impl SleepyEventHandler {
-        async fn on_test_event(&self, _event: &TestEvent) {
+        async fn on_test_event(&self, _event: &TestEvent) -> Result<(), SubscriberError> {
             sleep(self.sleep_time).await;
+            Ok(())
         }
     }
 

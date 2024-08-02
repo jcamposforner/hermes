@@ -7,7 +7,7 @@ use lapin::types::FieldTable;
 use log::error;
 use serde_json::Value;
 
-use crate::consumer::{AsyncConsumer, PayloadHandler, PayloadHandlerError};
+use crate::consumer::{AsyncConsumer, PayloadHandler, SubscriberError};
 use crate::consumer::rabbitmq_retryer::RabbitMQRetryer;
 use crate::rabbit::rabbit_channel::RabbitChannel;
 use crate::serializer::EventDeserializer;
@@ -73,12 +73,12 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
                 let result = self.handler.handle_value_payload(&event_deserializable.expect("Failed to deserialize event")).await;
 
                 match result {
-                    Ok(_) | Err(PayloadHandlerError::UnrecoverableError) => {
+                    Ok(_) | Err(SubscriberError::UnrecoverableError) => {
                         channel.basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                                .await
                             .expect("Failed to acknowledge message");
                     },
-                    Err(PayloadHandlerError::Inner(_)) => {
+                    Err(SubscriberError::Inner(_)) => {
                         self.retryer
                             .retry(&delivery)
                             .await;

@@ -82,7 +82,8 @@ impl MultithreadingEventBus {
         let handler: SubscriberClosure = Arc::new(move |event| {
             downcast_ref!(event, E)
                 .map(|event| {
-                    subscriber.handle_event(event);
+                    // TODO: Handle errors
+                    let _ = subscriber.handle_event(event);
                 });
         });
 
@@ -122,6 +123,7 @@ mod tests {
     use tokio::time::Instant;
 
     use crate::impl_event_handler;
+    use crate::subscriber::SubscriberError;
 
     use super::*;
 
@@ -138,9 +140,11 @@ mod tests {
     struct TestEventHandler {}
 
     impl TestEventHandler {
-        fn on(&self, _event: &TestEvent) {
+        fn on(&self, _event: &TestEvent) -> Result<(), SubscriberError> {
             sleep(Duration::from_secs(1));
             let _ = _event.tx.send(true);
+
+            Ok(())
         }
     }
 

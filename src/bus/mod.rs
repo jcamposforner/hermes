@@ -32,8 +32,8 @@ macro_rules! impl_event_handler {
     ($struct_name:ident, $method_name:ident, $($event:ident), *) => {
         $(
             impl $crate::subscriber::Subscriber<$event> for $struct_name {
-                fn handle_event(&self, event: &$event) {
-                    self.$method_name(event);
+                fn handle_event(&self, event: &$event) -> Result<(), $crate::subscriber::SubscriberError> {
+                    self.$method_name(event)
                 }
             }
         )*
@@ -41,16 +41,16 @@ macro_rules! impl_event_handler {
     ($struct_name:ident, $($event:ident), *) => {
         $(
             impl $crate::subscriber::Subscriber<$event> for $struct_name {
-                fn handle_event(&self, event: &$event) {
-                    self.on(event);
+                fn handle_event(&self, event: &$event) -> Result<(), $crate::subscriber::SubscriberError> {
+                    self.on(event)
                 }
             }
         )*
     };
     ($struct_name:ident) => {
         impl<T: $crate::event::Event> $crate::subscriber::Subscriber<T> for $struct_name {
-            fn handle_event(&self, event: &T) {
-                self.on(event);
+            fn handle_event(&self, event: &T) -> Result<(), $crate::subscriber::SubscriberError> {
+                self.on(event)
             }
         }
     };

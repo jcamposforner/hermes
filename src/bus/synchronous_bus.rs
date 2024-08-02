@@ -35,7 +35,8 @@ impl SynchronousEventBus {
         let handler: SubscriberClosure = Box::new(move |event| {
             downcast_ref!(event, E)
                 .map(|event| {
-                    subscriber.handle_event(event);
+                    // TODO: Handle errors
+                    let _ = subscriber.handle_event(event);
                 });
         });
 
@@ -62,7 +63,10 @@ impl EventBus for SynchronousEventBus {
 mod tests {
     use std::cell::RefCell;
     use std::rc::Rc;
+
     use crate::impl_event_handler;
+    use crate::subscriber::SubscriberError;
+
     use super::*;
 
     struct TestEvent {}
@@ -86,8 +90,9 @@ mod tests {
     }
 
     impl TestEventHandler {
-        fn on_test_event(&self, _event: &TestEvent) {
+        fn on_test_event(&self, _event: &TestEvent) -> Result<(), SubscriberError> {
             *self.total_messages_received.borrow_mut() += 1;
+            Ok(())
         }
     }
 
