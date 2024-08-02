@@ -5,7 +5,7 @@ use serde_json::Value;
 
 use hermes::consumer::PayloadHandler;
 use hermes::derive::Event;
-use hermes::event::Event;
+use hermes::event::{Event, EventMetadata};
 use hermes::impl_payload_handler;
 use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData, EventDeserializableMeta};
 use hermes::subscriber::SubscriberError;
@@ -14,11 +14,13 @@ use hermes::subscriber::SubscriberError;
 struct ChatMessageSent {
     pub message: String,
     pub user: String,
+    pub metadata: EventMetadata
 }
 
 #[derive(Debug, Serialize, Deserialize, Event)]
 struct ChatMessageReceived {
     pub message: String,
+    pub metadata: EventMetadata
 }
 
 struct SendNotificationOnChatMessageSent;
@@ -46,6 +48,7 @@ async fn main() {
     let event = ChatMessageSent {
         message: "new message".to_string(),
         user: "user".to_string(),
+        metadata: EventMetadata::default()
     };
     let json = serde_json::to_value(&event).unwrap();
     let mut handler = SendNotificationOnChatMessageSent;
@@ -61,7 +64,8 @@ async fn main() {
     handler.handle_value_payload(&message_from_rabbit).await.unwrap();
 
     let event = ChatMessageReceived {
-        message: "new message".to_string()
+        message: "new message".to_string(),
+        metadata: EventMetadata::default()
     };
     let json = serde_json::to_value(&event).unwrap();
 
