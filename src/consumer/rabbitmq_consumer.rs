@@ -70,7 +70,7 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
                     continue;
                 }
 
-                let result = self.handler.handle(&event_deserializable.expect("Failed to deserialize event"));
+                let result = self.handler.handle_value_payload(&event_deserializable.expect("Failed to deserialize event")).await;
 
                 match result {
                     Ok(_) | Err(PayloadHandlerError::UnrecoverableError) => {

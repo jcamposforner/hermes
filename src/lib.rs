@@ -8,6 +8,7 @@ pub mod bus;
 pub mod serializer;
 
 #[cfg(feature = "rabbit")]
+#[cfg(feature = "async")]
 pub mod consumer;
 
 #[cfg(feature = "rabbit")]
