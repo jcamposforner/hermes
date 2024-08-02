@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use downcaster::AsAny;
+#[cfg(feature = "serializer")]
 use serde::{Deserialize, Serialize};
 
 pub trait Event: AsAny + Sync + Send + 'static {
@@ -23,7 +24,12 @@ pub trait EventName {
 
 pub trait DomainEvent: Event {}
 
-#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+#[cfg(feature = "serializer")]
+#[derive(Default, Debug, Clone, Serialize, Deserialize)]
+pub struct EventMetadata(HashMap<String, String>);
+
+#[cfg(not(feature = "serializer"))]
+#[derive(Default, Debug, Clone)]
 pub struct EventMetadata(HashMap<String, String>);
 
 impl EventMetadata {

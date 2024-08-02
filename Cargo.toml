@@ -9,17 +9,24 @@ log = { version = "0.4.22", features = [] }
 downcaster = { git = "https://github.com/jcamposforner/downcaster", tag = "1.0.0" }
 
 hermes-derive = { path = "hermes-derive", optional = true }
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 
 [features]
 derive = ["hermes-derive"]
 async = ["tokio", "serializer"]
 multithreading = ["rayon"]
-serializer = []
+serializer = ["serde", "serde_json"]
 rabbit = ["lapin", "serializer", "async", "futures-lite"]
 
 full = ["derive", "async", "multithreading", "serializer", "rabbit"]
+
+[dependencies.serde]
+version = "1"
+features = ["derive"]
+optional = true
+
+[dependencies.serde_json]
+version = "1"
+optional = true
 
 [dependencies.futures-lite]
 version = "2"
