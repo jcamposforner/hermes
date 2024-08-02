@@ -7,7 +7,7 @@ use tokio::sync::RwLockReadGuard;
 
 use crate::bus::AsynchronousEventBus;
 use crate::bus::error::PublishError;
-use crate::event::Event;
+use crate::event::{Event, EventWithMetadata};
 use crate::rabbit::rabbit_channel::RabbitChannel;
 use crate::serializer::EventSerializer;
 
@@ -32,7 +32,7 @@ impl<'a, T: EventSerializer> RabbitEventBus<'a, T> {
 }
 
 impl<T: EventSerializer> AsynchronousEventBus for RabbitEventBus<'_, T> {
-    async fn publish<E: Event + Serialize>(&self, event: E) -> Result<(), PublishError> {
+    async fn publish<E: Event + EventWithMetadata + Serialize>(&self, event: E) -> Result<(), PublishError> {
         let channel = self.get_guard_channel().await?;
 
         self.publish_message(&event, &channel).await
@@ -40,7 +40,7 @@ impl<T: EventSerializer> AsynchronousEventBus for RabbitEventBus<'_, T> {
 }
 
 impl<T: EventSerializer> RabbitEventBus<'_, T> {
-    async fn publish_message<E: Event + Serialize>(&self, event: &E, channel: &Channel) -> Result<(), PublishError> {
+    async fn publish_message<E: Event + EventWithMetadata + Serialize>(&self, event: &E, channel: &Channel) -> Result<(), PublishError> {
         let payload = self.serializer.serialize(event).map_err(|_| PublishError::CannotSerializeEvent)?;
 
         let publish_message = channel

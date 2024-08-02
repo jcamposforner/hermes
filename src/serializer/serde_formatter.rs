@@ -1,7 +1,7 @@
 use serde::de::DeserializeOwned;
 use serde::Serialize;
 
-use crate::event::Event;
+use crate::event::{Event, EventWithMetadata};
 use crate::serializer::{EventDeserializer, EventSerializer};
 use crate::serializer::deserialized_event::EventDeserializable;
 use crate::serializer::error::{DeserializeError, SerializeError};
@@ -10,7 +10,7 @@ use crate::serializer::serialized_event::{EventSerializable, EventSerializableDa
 pub struct SerdeJSONEventFormatter;
 
 impl EventSerializer for SerdeJSONEventFormatter {
-    fn serialize<T: Event + Serialize>(&self, event: &T) -> Result<String, SerializeError> {
+    fn serialize<T: Event + EventWithMetadata + Serialize>(&self, event: &T) -> Result<String, SerializeError> {
         let event_serializable = EventSerializable::new(
             EventSerializableData::new(event.event_name(), event),
             EventSerializableMeta {}
@@ -31,12 +31,13 @@ impl EventDeserializer for SerdeJSONEventFormatter {
 #[cfg(test)]
 mod tests {
     use serde::Deserialize;
-
+    use crate::event::EventMetadata;
     use super::*;
 
     #[derive(Serialize, Deserialize, Debug)]
     struct SerializableEvent {
-        id: String
+        id: String,
+        metadata: EventMetadata
     }
 
     impl Event for SerializableEvent {
@@ -44,18 +45,32 @@ mod tests {
             "serializable_event"
         }
     }
+
+    impl EventWithMetadata for SerializableEvent {
+        fn add_metadata(&mut self, key: String, value: String) {
+            self.metadata.add(key, value);
+        }
+
+        fn get_metadata(&self, key: &str) -> Option<&String> {
+            self.metadata.get(key)
+        }
+
+        fn metadata(&self) -> &EventMetadata {
+            &self.metadata
+        }
+    }
     
     #[test]
     fn it_should_serialize_event_and_add_event_name() {
-        let event = SerializableEvent { id: "1".to_string() };
+        let event = SerializableEvent { id: "1".to_string(), metadata: EventMetadata::default() };
         let serialized = SerdeJSONEventFormatter.serialize(&event);
 
-        assert_eq!(serialized.unwrap(), "{\"data\":{\"type\":\"serializable_event\",\"attributes\":{\"id\":\"1\"}},\"meta\":{}}")
+        assert_eq!(serialized.unwrap(), "{\"data\":{\"type\":\"serializable_event\",\"attributes\":{\"id\":\"1\",\"metadata\":{}}},\"meta\":{}}")
     }
 
     #[test]
     fn it_should_deserialize_event_and_add_event_name() {
-        let json = "{\"data\":{\"type\":\"serializable_event\",\"attributes\":{\"id\":\"1\"}},\"meta\":{}}".to_string();
+        let json = "{\"data\":{\"type\":\"serializable_event\",\"attributes\":{\"id\":\"1\",\"metadata\":{}}},\"meta\":{}}".to_string();
 
         let deserialized = SerdeJSONEventFormatter.deserialize::<SerializableEvent>(json);
 

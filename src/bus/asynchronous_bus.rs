@@ -159,12 +159,29 @@ mod tests {
     use tokio::sync::mpsc::Sender;
     use tokio::time::{Instant, sleep};
 
+    use crate::event::{EventMetadata, EventWithMetadata};
     use crate::subscriber::SubscriberError;
 
     use super::*;
 
     #[derive(Serialize)]
-    struct TestEvent {}
+    struct TestEvent {
+        metadata: EventMetadata
+    }
+
+    impl EventWithMetadata for TestEvent {
+        fn add_metadata(&mut self, key: String, value: String) {
+            self.metadata.add(key, value);
+        }
+
+        fn get_metadata(&self, key: &str) -> Option<&String> {
+            self.metadata.get(key)
+        }
+
+        fn metadata(&self) -> &EventMetadata {
+            &self.metadata
+        }
+    }
 
     impl Event for TestEvent {
         fn event_name(&self) -> &'static str {
@@ -173,7 +190,23 @@ mod tests {
     }
 
     #[derive(Serialize)]
-    struct OtherTestEvent {}
+    struct OtherTestEvent {
+        metadata: EventMetadata
+    }
+
+    impl EventWithMetadata for OtherTestEvent {
+        fn add_metadata(&mut self, key: String, value: String) {
+            self.metadata.add(key, value);
+        }
+
+        fn get_metadata(&self, key: &str) -> Option<&String> {
+            self.metadata.get(key)
+        }
+
+        fn metadata(&self) -> &EventMetadata {
+            &self.metadata
+        }
+    }
 
 
     impl Event for OtherTestEvent {
@@ -214,7 +247,7 @@ mod tests {
         }));
 
         event_bus.register(Arc::new(OtherEventHandler {}));
-        let _ = event_bus.publish(TestEvent {}).await;
+        let _ = event_bus.publish(TestEvent { metadata: EventMetadata::default() }).await;
 
         let total_messages_received = rx.recv().await.unwrap();
 
@@ -246,7 +279,7 @@ mod tests {
         let event_bus = Arc::new(event_bus);
         let start = Instant::now();
 
-        async_publish_all!(event_bus, TestEvent {}, TestEvent {}, OtherTestEvent {});
+        async_publish_all!(event_bus, TestEvent { metadata: EventMetadata::default()}, TestEvent { metadata: EventMetadata::default()}, OtherTestEvent { metadata: EventMetadata::default()});
 
         let duration = start.elapsed();
 
