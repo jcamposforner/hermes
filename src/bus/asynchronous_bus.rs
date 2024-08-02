@@ -35,8 +35,12 @@ impl TokioEventBus {
             Box::pin(async move {
                 let event = event.as_ref();
                 if let Some(event) = downcast_ref!(event, E) {
-                    // TODO: Handle errors
-                    let _ = value.handle_event(event).await;
+                    match value.handle_event(event).await {
+                        Ok(_) => {},
+                        Err(e) => {
+                            log::error!("Error while processing event: {:?}", e);
+                        }
+                    }
                 }
             })
         });
