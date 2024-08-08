@@ -153,6 +153,7 @@ macro_rules! async_publish_all {
 
 #[cfg(test)]
 mod tests {
+    use std::mem;
     use std::time::Duration;
 
     use serde::Serialize;
@@ -181,6 +182,10 @@ mod tests {
         fn metadata(&self) -> &EventMetadata {
             &self.metadata
         }
+
+        fn drain_metadata(&mut self) -> EventMetadata {
+            mem::take(&mut self.metadata)
+        }
     }
 
     impl Event for TestEvent {
@@ -205,6 +210,10 @@ mod tests {
 
         fn metadata(&self) -> &EventMetadata {
             &self.metadata
+        }
+
+        fn drain_metadata(&mut self) -> EventMetadata {
+            mem::take(&mut self.metadata)
         }
     }
 

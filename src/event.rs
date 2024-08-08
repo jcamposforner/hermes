@@ -16,6 +16,7 @@ pub trait EventWithMetadata: AsAny + Sync + Send + 'static {
     fn add_metadata(&mut self, key: String, value: String);
     fn get_metadata(&self, key: &str) -> Option<&String>;
     fn metadata(&self) -> &EventMetadata;
+    fn drain_metadata(&mut self) -> EventMetadata;
 }
 
 pub trait EventName {

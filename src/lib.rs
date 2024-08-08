@@ -17,5 +17,5 @@ pub mod rabbit;
 #[cfg(feature = "derive")]
 pub mod derive {
     pub use hermes_derive::Event;
-    pub use hermes_derive::Metadata;
+    pub use hermes_derive::EventMetadata;
 }

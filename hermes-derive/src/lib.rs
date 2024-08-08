@@ -1,6 +1,6 @@
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(Metadata)]
+#[proc_macro_derive(EventMetadata)]
 pub fn metadata_derive(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
     let name = &input.ident;
@@ -17,6 +17,10 @@ pub fn metadata_derive(input: TokenStream) -> TokenStream {
 
             fn metadata(&self) -> &hermes::event::EventMetadata {
                 &self.metadata
+            }
+
+            fn drain_metadata(&mut self) -> hermes::event::EventMetadata {
+                std::mem::take(&mut self.metadata)
             }
         }
     };

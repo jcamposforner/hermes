@@ -3,7 +3,7 @@
 use serde::Serialize;
 
 use crate::bus::error::PublishError;
-use crate::event::Event;
+use crate::event::{Event, EventWithMetadata};
 
 pub mod synchronous_bus;
 

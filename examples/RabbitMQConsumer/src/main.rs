@@ -7,7 +7,7 @@ use hermes::consumer::PayloadHandler;
 use hermes::derive::Event;
 use hermes::event::{Event, EventMetadata};
 use hermes::impl_payload_handler;
-use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData, EventDeserializableMeta};
+use hermes::serializer::deserialized_event::{EventDeserializable, EventDeserializableData};
 use hermes::subscriber::SubscriberError;
 
 #[derive(Debug, Serialize, Deserialize, Event)]
@@ -57,8 +57,7 @@ async fn main() {
         data: EventDeserializableData {
             event_name: event.event_name().to_string(),
             attributes: json,
-        },
-        meta: EventDeserializableMeta {},
+        }
     };
 
     handler.handle_value_payload(&message_from_rabbit).await.unwrap();
@@ -73,8 +72,7 @@ async fn main() {
         data: EventDeserializableData {
             event_name: event.event_name().to_string(),
             attributes: json,
-        },
-        meta: EventDeserializableMeta {},
+        }
     };
 
     handler.handle_value_payload(&message_from_rabbit).await.unwrap();
