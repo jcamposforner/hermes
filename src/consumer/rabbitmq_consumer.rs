@@ -59,7 +59,7 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
             .unwrap();
 
         while let Some(delivery) = consumer.next().await {
-            if let Ok(mut delivery) = delivery {
+            if let Ok(delivery) = delivery {
                 let payload = std::str::from_utf8(&delivery.data).unwrap();
 
                 let event_deserializable = self.deserializer

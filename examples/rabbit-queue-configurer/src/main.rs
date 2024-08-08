@@ -1,10 +1,6 @@
 use lapin::{Connection, ConnectionProperties};
 
-use hermes::derive::Event;
 use hermes::rabbit::rabbit_configurer::RabbitConfigurer;
-
-#[derive(Event)]
-struct ChatMessageSent;
 
 #[tokio::main]
 async fn main() {
@@ -14,5 +10,9 @@ async fn main() {
         1000
     );
 
-    configurer.configure::<ChatMessageSent>("test").await;
+    configurer.configure(
+        (
+            "update_user_total_messages_on_event",
+            &["user_sent_message", "user_removed_message"]
+        )).await;
 }

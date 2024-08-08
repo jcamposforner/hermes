@@ -2,8 +2,6 @@ use lapin::{Channel, Connection, ExchangeKind};
 use lapin::options::{ExchangeDeclareOptions, QueueBindOptions};
 use lapin::types::{AMQPValue, FieldTable};
 
-use crate::event::{Event, EventName};
-
 pub struct RabbitConfigurer {
     connection: Connection,
     exchange: String,
@@ -19,13 +17,13 @@ impl RabbitConfigurer {
         RabbitConfigurer { connection, exchange, retry_ttl }
     }
 
-    pub async fn configure<E: Event + EventName>(&self, queue_name: &str) {
+    pub async fn configure(&self, queue: (&str, &[&str])) {
         let channel = self.connection.create_channel().await.expect("Cannot open channel");
         self.declare_exchanges(&channel).await;
 
-        self.create_queue::<E>(queue_name, &channel).await;
-        self.create_retry_queue(queue_name, &channel).await;
-        self.create_dead_letter_queue(queue_name, &channel).await;
+        self.create_queue(queue.0, queue.1, &channel).await;
+        self.create_retry_queue(queue.0, &channel).await;
+        self.create_dead_letter_queue(queue.0, &channel).await;
     }
 
     async fn declare_exchanges(&self, channel: &Channel) {
@@ -40,7 +38,6 @@ impl RabbitConfigurer {
             options,
             FieldTable::default()
         ).await.expect("Cannot declare exchange");
-
 
         channel.exchange_declare(
             format!("retry-{}", self.exchange.as_str()).as_str(),
@@ -57,7 +54,7 @@ impl RabbitConfigurer {
         ).await.expect("Cannot declare dead_letter exchange");
     }
 
-    async fn create_queue<E: Event + EventName>(&self, queue_name: &str, channel: &Channel) {
+    async fn create_queue(&self, queue_name: &str, routing_keys: &[&str], channel: &Channel) {
         channel.queue_declare(
             queue_name,
             lapin::options::QueueDeclareOptions {
@@ -67,13 +64,15 @@ impl RabbitConfigurer {
             Default::default()
         ).await.expect("Cannot declare queue");
 
-        channel.queue_bind(
-            queue_name,
-            self.exchange.as_str(),
-            E::static_event_name(),
-            Default::default(),
-            Default::default()
-        ).await.expect("Cannot bind queue to exchange");
+        for routing_key in routing_keys {
+            channel.queue_bind(
+                queue_name,
+                self.exchange.as_str(),
+                routing_key,
+                Default::default(),
+                Default::default()
+            ).await.expect("Cannot bind queue to exchange");
+        }
 
         channel.queue_bind(
             queue_name,
