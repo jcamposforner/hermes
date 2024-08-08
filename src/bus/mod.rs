@@ -15,7 +15,7 @@ pub mod multithreading_bus;
 
 #[cfg(feature = "rabbit")]
 pub mod rabbitmq_bus;
-mod error;
+pub(crate) mod error;
 
 pub trait EventBus {
     fn publish<E: Event>(&self, event: E);

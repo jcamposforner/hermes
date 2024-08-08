@@ -59,7 +59,7 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
             .unwrap();
 
         while let Some(delivery) = consumer.next().await {
-            if let Ok(delivery) = delivery {
+            if let Ok(mut delivery) = delivery {
                 let payload = std::str::from_utf8(&delivery.data).unwrap();
 
                 let event_deserializable = self.deserializer
@@ -80,8 +80,9 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
                     },
                     Err(SubscriberError::Inner(_)) => {
                         self.retryer
-                            .retry(&delivery)
-                            .await;
+                            .retry(&mut delivery)
+                            .await
+                            .expect("Failed to retry message");
 
                         channel.basic_ack(delivery.delivery_tag, BasicAckOptions::default())
                                .await

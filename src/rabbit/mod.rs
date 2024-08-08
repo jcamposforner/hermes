@@ -2,7 +2,7 @@ use std::error::Error;
 use std::fmt::{Display, Formatter};
 
 pub mod rabbit_channel;
-
+pub mod rabbit_publisher;
 
 #[derive(Debug)]
 pub enum RabbitError {
