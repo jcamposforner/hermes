@@ -3,6 +3,7 @@ use std::fmt::{Display, Formatter};
 
 pub mod rabbit_channel;
 pub mod rabbit_publisher;
+pub mod rabbit_configurer;
 
 #[derive(Debug)]
 pub enum RabbitError {

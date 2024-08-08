@@ -68,7 +68,7 @@ async fn main() {
     let formatter = SerdeJSONEventFormatter;
     let publisher = Arc::new(RabbitPublisher::new(connection.clone()).await.unwrap());
 
-    let event_bus = RabbitEventBus::new(publisher.clone(), &formatter, "chat".to_string()).await;
+    let event_bus = RabbitEventBus::new(publisher.clone(), &formatter, "exchange".to_string()).await;
 
     let mut metadata = EventMetadata::default();
     metadata.add("correlation-id".to_string(), "498404fa-0946-4be0-84f7-0a994c61fd77".to_string());
@@ -84,8 +84,8 @@ async fn main() {
     let retryer = RabbitMQRetryer::new(publisher, 3);
     let mut consumer = RabbitMQConsumer::new(
         connection,
-        "SendNotificationOnChatMessageSent",
-        "SendNotificationOnChatMessageSentTag",
+        "test",
+        "update_total_messages_on_chat_message_sent_tag",
         &formatter,
         SendNotificationOnChatMessageSent,
         &retryer

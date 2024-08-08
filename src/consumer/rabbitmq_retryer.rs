@@ -16,20 +16,20 @@ impl RabbitMQRetryer {
         RabbitMQRetryer { publisher, max_retries }
     }
 
-    pub async fn retry(&self, delivery: &mut Delivery) -> Result<(), PublishError> {
+    pub async fn retry(&self, delivery: &Delivery, queue_name: &str) -> Result<(), PublishError> {
         let redelivery_count = Self::get_redelivery_count(delivery);
         let exchange = self.get_target_exchange(delivery, redelivery_count);
         let headers = Self::add_redelivery_count_header(delivery, redelivery_count);
 
         self.publisher.publish_with_headers(
             &delivery.data,
-            delivery.routing_key.as_str(),
+            queue_name,
             &exchange,
             headers
         ).await
     }
 
-    fn get_target_exchange(&self, delivery: &mut Delivery, redelivery_count: i64) -> String {
+    fn get_target_exchange(&self, delivery: &Delivery, redelivery_count: i64) -> String {
         if redelivery_count > self.max_retries as i64 {
             return format!("dead_letter-{}", delivery.exchange);
         }
@@ -37,7 +37,7 @@ impl RabbitMQRetryer {
         format!("retry-{}", delivery.exchange)
     }
 
-    fn add_redelivery_count_header(delivery: &mut Delivery, redelivery_count: i64) -> FieldTable {
+    fn add_redelivery_count_header(delivery: &Delivery, redelivery_count: i64) -> FieldTable {
         let mut headers = delivery.properties.headers().clone().unwrap_or_default();
         headers.insert(
             "redelivery_count".into(),
@@ -46,7 +46,7 @@ impl RabbitMQRetryer {
         headers
     }
 
-    fn get_redelivery_count(delivery: &mut Delivery) -> i64 {
+    fn get_redelivery_count(delivery: &Delivery) -> i64 {
         let mut redelivery_count: i64 = 0;
         if let Some(headers) = delivery.properties.headers() {
             if let Some(redelivery_count_value) = headers.inner().get("redelivery_count") {

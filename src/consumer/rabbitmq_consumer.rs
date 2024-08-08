@@ -80,7 +80,7 @@ impl<'a, D: EventDeserializer, EH: PayloadHandler<Value>> AsyncConsumer for Rabb
                     },
                     Err(SubscriberError::Inner(_)) => {
                         self.retryer
-                            .retry(&mut delivery)
+                            .retry(&delivery, self.queue.as_str())
                             .await
                             .expect("Failed to retry message");
 
