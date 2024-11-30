@@ -42,3 +42,81 @@ impl EventMetadata {
         self.0.get(key)
     }
 }
+
+#[macro_export]
+macro_rules! event {
+    ($event_name:ident,$($field_name:ident:$field_type:ty),*) => {
+        #[derive(Debug, Clone)]
+        pub struct $event_name {
+            pub metadata: hermes::event::EventMetadata,
+            $(
+                pub $field_name: $field_type,
+            )*
+        }
+
+        impl hermes::event::Event for $event_name {
+            fn event_name(&self) -> &'static str {
+                stringify!($event_name)
+            }
+
+            fn event_version(&self) -> &'static str {
+                "1.0"
+            }
+        }
+
+        impl hermes::event::EventWithMetadata for $event_name {
+            fn add_metadata(&mut self, key: String, value: String) {
+                self.metadata.add(key, value);
+            }
+
+            fn get_metadata(&self, key: &str) -> Option<&String> {
+                self.metadata.get(key)
+            }
+
+            fn metadata(&self) -> &hermes::event::EventMetadata {
+                &self.metadata
+            }
+
+            fn drain_metadata(&mut self) -> hermes::event::EventMetadata {
+                std::mem::take(&mut self.metadata)
+            }
+        }
+    };
+    ($event_name:ident,$event_trait_name:literal,$($field_name:ident:$field_type:ty),*) => {
+        #[derive(Debug, Clone)]
+        pub struct $event_name {
+            pub metadata: hermes::event::EventMetadata,
+            $(
+                pub $field_name: $field_type,
+            )*
+        }
+
+        impl hermes::event::Event for $event_name {
+            fn event_name(&self) -> &'static str {
+                $event_trait_name
+            }
+
+            fn event_version(&self) -> &'static str {
+                "1.0"
+            }
+        }
+
+        impl hermes::event::EventWithMetadata for $event_name {
+            fn add_metadata(&mut self, key: String, value: String) {
+                self.metadata.add(key, value);
+            }
+
+            fn get_metadata(&self, key: &str) -> Option<&String> {
+                self.metadata.get(key)
+            }
+
+            fn metadata(&self) -> &hermes::event::EventMetadata {
+                &self.metadata
+            }
+
+            fn drain_metadata(&mut self) -> hermes::event::EventMetadata {
+                std::mem::take(&mut self.metadata)
+            }
+        }
+    };
+}

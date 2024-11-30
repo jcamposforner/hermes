@@ -1,18 +1,16 @@
 use std::rc::Rc;
 
-use hermes::{impl_event_handler, impl_payload_handler};
-use hermes::bus::EventBus;
 use hermes::bus::synchronous_bus::SynchronousEventBus;
-use hermes::derive::{Event, EventMetadata};
+use hermes::bus::EventBus;
 use hermes::event::{Event, EventMetadata, EventWithMetadata};
 use hermes::subscriber::SubscriberError;
+use hermes::{event, impl_event_handler};
 
-#[derive(Event, EventMetadata, Debug)]
-struct ChatMessageSent {
-    pub message: String,
-    pub user: String,
-    pub metadata: EventMetadata
-}
+event!(
+    ChatMessageSent,
+    message: String,
+    user: String
+);
 
 impl ChatMessageSent {
     fn new(message: String, user: String) -> Self {
