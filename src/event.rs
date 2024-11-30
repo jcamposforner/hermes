@@ -64,23 +64,7 @@ macro_rules! event {
             }
         }
 
-        impl hermes::event::EventWithMetadata for $event_name {
-            fn add_metadata(&mut self, key: String, value: String) {
-                self.metadata.add(key, value);
-            }
-
-            fn get_metadata(&self, key: &str) -> Option<&String> {
-                self.metadata.get(key)
-            }
-
-            fn metadata(&self) -> &hermes::event::EventMetadata {
-                &self.metadata
-            }
-
-            fn drain_metadata(&mut self) -> hermes::event::EventMetadata {
-                std::mem::take(&mut self.metadata)
-            }
-        }
+        $crate::event_metadata!($event_name);
     };
     ($event_name:ident,$event_trait_name:literal,$($field_name:ident:$field_type:ty),*) => {
         #[derive(Debug, Clone)]
@@ -101,6 +85,13 @@ macro_rules! event {
             }
         }
 
+        $crate::event_metadata!($event_name);
+    };
+}
+
+#[macro_export]
+macro_rules! event_metadata {
+    ($event_name:ident) => {
         impl hermes::event::EventWithMetadata for $event_name {
             fn add_metadata(&mut self, key: String, value: String) {
                 self.metadata.add(key, value);
