@@ -2,7 +2,7 @@ use std::rc::Rc;
 
 use hermes::bus::synchronous_bus::SynchronousEventBus;
 use hermes::bus::EventBus;
-use hermes::event::{Event, EventMetadata, EventWithMetadata};
+use hermes::event::{Event, EventWithMetadata};
 use hermes::subscriber::SubscriberError;
 use hermes::{event, impl_event_handler};
 
@@ -11,16 +11,6 @@ event!(
     message: String,
     user: String
 );
-
-impl ChatMessageSent {
-    fn new(message: String, user: String) -> Self {
-        Self {
-            message,
-            user,
-            metadata: EventMetadata::default()
-        }
-    }
-}
 
 struct UpdateTotalMessagesSent;
 

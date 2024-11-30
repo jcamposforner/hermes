@@ -54,6 +54,15 @@ macro_rules! event {
             )*
         }
 
+        impl $event_name {
+            pub fn new($($field_name: $field_type),*) -> Self {
+                Self {
+                    metadata: hermes::event::EventMetadata::default(),
+                    $($field_name,)*
+                }
+            }
+        }
+
         impl hermes::event::Event for $event_name {
             fn event_name(&self) -> &'static str {
                 stringify!($event_name)
